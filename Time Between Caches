@@ -1,0 +1,39 @@
+import glob
+import os
+import datetime
+
+#get selected node
+selected = hou.selectedNodes()
+current_node = selected[0]
+
+#check if it's a mantra node or an open gl flipbook node or cache node
+nodeType = current_node.type()
+nodeTypeName = nodeType.name()
+
+if nodeTypeName == "ifd":
+    file_path = current_node.parm("vm_picture").eval()
+
+if nodeTypeName == "filecache":
+    file_path = current_node.parm("file").eval()
+
+if nodeTypeName == "opengl":
+    file_path = current_node.parm("picture").eval()
+
+
+dir_path = os.path.dirname(file_path)
+
+list_of_files = glob.glob(dir_path+'/*')
+
+oldest_file = min(list_of_files, key=os.path.getmtime)
+latest_file = max(list_of_files, key=os.path.getmtime)
+
+#get human readable time
+solve_time = (datetime.datetime.fromtimestamp(os.path.getmtime(latest_file)) - datetime.datetime.fromtimestamp(os.path.getmtime(oldest_file)))
+
+
+current_node.setGenericFlag(hou.nodeFlag.DisplayComment,True)
+print "Solve Time of " + current_node.name()
+print solve_time
+
+#set comment
+current_node.setComment("Solve Time is " + str(solve_time))
